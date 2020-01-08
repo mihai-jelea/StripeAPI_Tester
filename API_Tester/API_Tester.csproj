@@ -59,8 +59,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="JSONs\charge.json" />
+    <None Include="JSONs\charge_update_response.json" />
+    <None Include="JSONs\list_charges.json" />
     <None Include="packages.config" />
-    <None Include="res\balance.json" />
+    <None Include="JSONs\balance.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
