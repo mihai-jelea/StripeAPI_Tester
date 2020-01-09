@@ -29,10 +29,13 @@ namespace API_Tester
             //await GetAllCharges();
 
             // Update a Charge Description
-            await UpdateChargeDescription();
+            //await UpdateChargeDescription();
 
             // Update Charge - multiple fields
             //await UpdateCharge();
+
+            // Post JSON to API
+            await PostJson();
 
             httpClient.Dispose();
             Console.WriteLine("\n\nPress any key to exit...");
@@ -267,5 +270,51 @@ namespace API_Tester
             response.Dispose();
         }
         #endregion
+
+        #region Post a JSON to an API
+        private static async Task PostJson()
+        {
+            // Create a new HTTP request
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, new Uri("https://reqres.in/api/users"));
+
+            // Add headers
+
+            // Add the data to be sent
+            var requestBody = new StringContent(
+                JsonConvert.SerializeObject(new { 
+                    name = "mihai", 
+                    job = "solutions architect" }),
+                Encoding.UTF8, "application/json");
+
+            request.Content = requestBody;
+
+            // Send the request
+            HttpResponseMessage response = await httpClient.SendAsync(request);
+
+            // Get the response and extract the contents
+            JObject obj = JsonConvert.DeserializeObject<JObject>(response.Content.ReadAsStringAsync().Result);
+            string userId = obj["id"].ToString();
+
+            Console.WriteLine("\n\n+----------------------------------/// Send JSON to API ///-----------------------------------+");
+            Console.WriteLine("+----------------------------------------------------------------------------------------------+");
+            Console.WriteLine("API url: " + request.RequestUri);
+            Console.WriteLine("\nSent HTTP POST Request");
+            Console.WriteLine("\nReceived HTTP Response:");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(response);
+                Console.WriteLine("\n_____________________");
+                Console.WriteLine("User was created: ID = " + userId);
+                Console.WriteLine("_____________________");
+            }
+            else
+                Console.WriteLine(response.StatusCode + ": " + ((JObject)obj)["error"]["message"]);
+
+            request.Dispose();
+            response.Dispose();
+        }
+        #endregion
+
     }
 }
