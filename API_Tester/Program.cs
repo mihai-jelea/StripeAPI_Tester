@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Stripe;
 using Newtonsoft.Json.Linq;
-using System.Web;
 using System.Collections.Generic;
+using System.Net;
 
 namespace API_Tester
 {
@@ -30,6 +30,9 @@ namespace API_Tester
 
             // Update a Charge Description
             await UpdateChargeDescription();
+
+            // Update Charge - multiple fields
+            //await UpdateCharge();
 
             httpClient.Dispose();
             Console.WriteLine("\n\nPress any key to exit...");
@@ -186,8 +189,8 @@ namespace API_Tester
             HttpResponseMessage response = await httpClient.SendAsync(request);
 
             // Get the response and extract the contents
-            var obj = JsonConvert.DeserializeObject<dynamic>(response.Content.ReadAsStringAsync().Result);
-            string updatedDescription = ((JObject)obj)["description"].ToString();
+            JObject obj = JsonConvert.DeserializeObject<JObject>(response.Content.ReadAsStringAsync().Result);
+            string updatedDescription = obj["description"].ToString();
 
 
             Console.WriteLine("\n\n+----------------------------------/// Update a Charge ///-----------------------------------+");
@@ -206,6 +209,63 @@ namespace API_Tester
         }
         #endregion
 
+        #region Update Charge by sending the arguments in the HTTP Request Body (Content)
+        private static async Task UpdateCharge()
+        {
+            // Store the id of the charge
+            string chargeId = "ch_1FiJ6YIH6I6LxPXfQnP59vda";
 
+            // Set the new description
+            string newDescription = "Description updated programatically from .NET | " + DateTime.Now.ToString();
+
+            // Set the Charges API endpoint for updating the description field of a Charge
+            Uri chargesApiUrl = new Uri("https://api.stripe.com/v1/charges/" + chargeId);
+
+            // Create a new HTTP request
+            HttpRequestMessage request = new HttpRequestMessage();
+
+            // Set the endpoint and the HTTP method
+            request.RequestUri = chargesApiUrl;
+            request.Method = HttpMethod.Post;
+
+            // Add headers
+            request.Headers.Add("TE", "compress");
+            request.Headers.Add("Upgrade-Insecure-Requests", "1");
+
+            // Add the data to be sent
+            var requestBody = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("description", newDescription),
+                new KeyValuePair<string, string>("customer", "cus_GVnSzd6zjUEOZO"),
+            };
+
+            request.Content = new FormUrlEncodedContent(requestBody);
+
+            // Send the request
+            HttpResponseMessage response = await httpClient.SendAsync(request);
+
+            // Get the response and extract the contents
+            JObject obj = JsonConvert.DeserializeObject<JObject>(response.Content.ReadAsStringAsync().Result);
+
+            Console.WriteLine("\n\n+----------------------------------/// Update a Charge ///-----------------------------------+");
+            Console.WriteLine("+----------------------------------------------------------------------------------------------+");
+            Console.WriteLine("API url: " + request.RequestUri);
+            Console.WriteLine("Sent HTTP POST Request for charge: " + chargeId.ToString());
+            Console.WriteLine("Received HTTP Response:");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(response);
+                Console.WriteLine("\n_____________________");
+                Console.WriteLine("\nCharge " + chargeId + " was updated successfully.");
+                Console.WriteLine("_____________________");
+            }
+            else
+                Console.WriteLine(response.StatusCode + ": " + ((JObject)obj)["error"]["message"]);
+
+            request.Dispose();
+            response.Dispose();
+        }
+        #endregion
     }
 }
